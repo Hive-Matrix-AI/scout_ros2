@@ -1,9 +1,11 @@
 # scout_base
 
-`scout_base` is the ROS 2 Humble hardware driver for SCOUT MINI and SCOUT MINI
+`scout_base` is the ROS 2 hardware driver for SCOUT MINI and SCOUT MINI
 OMNI. It connects to the base through SocketCAN, publishes robot state and
 wheel-integrated odometry, broadcasts `odom` to `base_link`, and accepts
 `geometry_msgs/msg/Twist` velocity commands.
+
+Supported environments are Humble on Ubuntu 22.04 and Jazzy on Ubuntu 24.04.
 
 For installation, CAN configuration, launch parameters, interface contracts,
 and troubleshooting, see the [repository documentation](../README.md).

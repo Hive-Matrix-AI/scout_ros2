@@ -6,6 +6,8 @@ Notable user-facing changes to this repository are documented here.
 
 ### Added
 
+- Ubuntu 24.04 / ROS 2 Jazzy support alongside Ubuntu 22.04 / ROS 2 Humble,
+  with build, test, and installed-entry-point checks for both environments.
 - An auxiliary, dependency-light `scout_base` terminal dashboard for status,
   odometry, actuator, light, RC, and guarded low-speed motion tests.
 - SCOUT MINI CAN diagnostics via `ros2 run scout_base scout_mini_smoke`.

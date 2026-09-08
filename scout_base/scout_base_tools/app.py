@@ -19,9 +19,9 @@ import curses
 import sys
 from time import monotonic
 
-import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+import rclpy
 from rclpy.node import Node
 from rclpy.utilities import remove_ros_args
 from scout_msgs.msg import ScoutLightCmd, ScoutRCState, ScoutStatus
@@ -29,7 +29,7 @@ from scout_msgs.msg import ScoutLightCmd, ScoutRCState, ScoutStatus
 from .core import DeadmanController, TopicHealth, Velocity, yaw_from_quaternion
 
 
-MOTOR_NAMES = ("front-right", "front-left", "rear-right", "rear-left")
+MOTOR_NAMES = ('front-right', 'front-left', 'rear-right', 'rear-left')
 LIGHT_OFF = ScoutLightCmd.LIGHT_CONST_OFF
 LIGHT_ON = ScoutLightCmd.LIGHT_CONST_ON
 
@@ -38,14 +38,14 @@ class ScoutTestNode(Node):
     """ROS-facing portion of the test console."""
 
     def __init__(self, args):
-        super().__init__("scout_test_tui")
+        super().__init__('scout_test_tui')
         self.status = None
         self.odometry = None
         self.remote = None
         self.health = {
-            "status": TopicHealth(),
-            "odom": TopicHealth(),
-            "remote": TopicHealth(),
+            'status': TopicHealth(),
+            'odom': TopicHealth(),
+            'remote': TopicHealth(),
         }
         self.command_publisher = self.create_publisher(
             Twist, args.cmd_topic, 5
@@ -63,15 +63,15 @@ class ScoutTestNode(Node):
 
     def _on_status(self, message):
         self.status = message
-        self.health["status"].record()
+        self.health['status'].record()
 
     def _on_odom(self, message):
         self.odometry = message
-        self.health["odom"].record()
+        self.health['odom'].record()
 
     def _on_remote(self, message):
         self.remote = message
-        self.health["remote"].record()
+        self.health['remote'].record()
 
     def publish_velocity(self, velocity):
         message = Twist()
@@ -100,7 +100,7 @@ class ScoutConsole:
         self.deadman = DeadmanController(args.deadman_timeout)
         self.front_light = False
         self.rear_light = False
-        self.notice = "Monitor mode: press uppercase E to arm motion"
+        self.notice = 'Monitor mode: press uppercase E to arm motion'
         self.running = True
         self._last_publish = 0.0
         self._configure_screen()
@@ -133,53 +133,53 @@ class ScoutConsole:
     def _handle_key(self, key):
         if key == -1:
             return
-        if key == ord("E"):
+        if key == ord('E'):
             if self.deadman.armed:
                 self.deadman.disarm()
                 self.node.publish_velocity(Velocity())
-                self.notice = "Motion locked; zero command sent"
+                self.notice = 'Motion locked; zero command sent'
             else:
                 self.deadman.arm()
-                self.notice = "Motion ARMED; keep tapping/holding a drive key"
+                self.notice = 'Motion ARMED; keep tapping/holding a drive key'
             return
-        if key in (27, ord(" ")):
+        if key in (27, ord(' ')):
             self.deadman.disarm()
             self.node.publish_velocity(Velocity())
-            self.notice = "EMERGENCY STOP: motion locked"
+            self.notice = 'EMERGENCY STOP: motion locked'
             return
-        if key in (ord("q"), ord("Q")):
+        if key in (ord('q'), ord('Q')):
             self.deadman.disarm()
             self.node.publish_velocity(Velocity())
             self.running = False
             return
-        if key == ord("1"):
+        if key == ord('1'):
             self.front_light = not self.front_light
             self.node.publish_lights(self.front_light, self.rear_light)
-            self.notice = "Front light toggled"
+            self.notice = 'Front light toggled'
             return
-        if key == ord("2"):
+        if key == ord('2'):
             self.rear_light = not self.rear_light
             self.node.publish_lights(self.front_light, self.rear_light)
-            self.notice = "Rear light toggled"
+            self.notice = 'Rear light toggled'
             return
 
         commands = {
-            ord("w"): Velocity(linear=self.args.linear_speed),
-            ord("s"): Velocity(linear=-self.args.linear_speed),
-            ord("a"): Velocity(angular=self.args.angular_speed),
-            ord("d"): Velocity(angular=-self.args.angular_speed),
+            ord('w'): Velocity(linear=self.args.linear_speed),
+            ord('s'): Velocity(linear=-self.args.linear_speed),
+            ord('a'): Velocity(angular=self.args.angular_speed),
+            ord('d'): Velocity(angular=-self.args.angular_speed),
         }
         if self.args.omni:
             commands.update(
                 {
-                    ord("j"): Velocity(lateral=self.args.lateral_speed),
-                    ord("l"): Velocity(lateral=-self.args.lateral_speed),
+                    ord('j'): Velocity(lateral=self.args.lateral_speed),
+                    ord('l'): Velocity(lateral=-self.args.lateral_speed),
                 }
             )
         command = commands.get(key)
         if command is not None:
             if not self.deadman.pulse(command):
-                self.notice = "Motion is locked; press uppercase E first"
+                self.notice = 'Motion is locked; press uppercase E first'
 
     def _publish_command(self):
         current = monotonic()
@@ -199,43 +199,43 @@ class ScoutConsole:
 
     def _draw(self):
         self.screen.erase()
-        status_online = self.node.health["status"].online()
-        connection = "ONLINE" if status_online else "NO DATA"
+        status_online = self.node.health['status'].online()
+        connection = 'ONLINE' if status_online else 'NO DATA'
         connection_style = curses.color_pair(1 if status_online else 3)
         armed_style = curses.color_pair(2 if self.deadman.armed else 1)
         self._safe_add(
-            0, 0, "SCOUT MINI · Hardware Test Console", curses.A_BOLD
+            0, 0, 'SCOUT MINI · Hardware Test Console', curses.A_BOLD
         )
         self._safe_add(0, 37, connection, connection_style | curses.A_BOLD)
         self._safe_add(
             1,
             0,
-            "Motion: " + ("ARMED" if self.deadman.armed else "LOCKED"),
+            'Motion: ' + ('ARMED' if self.deadman.armed else 'LOCKED'),
             armed_style | curses.A_BOLD,
         )
         self._safe_add(
             1,
             22,
-            "cmd_vel subscribers: "
-            f"{self.node.command_publisher.get_subscription_count()}",
+            'cmd_vel subscribers: '
+            f'{self.node.command_publisher.get_subscription_count()}',
         )
         self._safe_add(2, 0, self._can_summary())
 
-        self._safe_add(4, 0, "TOPICS", curses.A_BOLD | curses.color_pair(4))
+        self._safe_add(4, 0, 'TOPICS', curses.A_BOLD | curses.color_pair(4))
         for index, (label, key) in enumerate(
             (
-                ("scout_status", "status"),
-                ("odom", "odom"),
-                ("rc_status", "remote"),
+                ('scout_status', 'status'),
+                ('odom', 'odom'),
+                ('rc_status', 'remote'),
             )
         ):
             health = self.node.health[key]
             age = health.age()
-            age_text = "--" if age is None else f"{age:5.2f}s"
+            age_text = '--' if age is None else f'{age:5.2f}s'
             self._safe_add(
                 5 + index,
                 0,
-                f"{label:<14} {health.rate():6.1f} Hz   age {age_text}",
+                f'{label:<14} {health.rate():6.1f} Hz   age {age_text}',
             )
 
         self._draw_base(4, 42)
@@ -245,101 +245,101 @@ class ScoutConsole:
 
         height, _ = self.screen.getmaxyx()
         controls = (
-            "W/S drive  A/D turn  Space/Esc STOP  "
-            "E arm/lock  1/2 lights  Q quit"
+            'W/S drive  A/D turn  Space/Esc STOP  '
+            'E arm/lock  1/2 lights  Q quit'
         )
         if self.args.omni:
             controls = (
-                "W/S drive  A/D turn  J/L strafe  "
-                "Space/Esc STOP  E arm  Q quit"
+                'W/S drive  A/D turn  J/L strafe  '
+                'Space/Esc STOP  E arm  Q quit'
             )
         self._safe_add(height - 3, 0, controls, curses.A_BOLD)
         self._safe_add(height - 2, 0, self.notice, curses.color_pair(2))
         self._safe_add(
             height - 1,
             0,
-            "Drive keys are deadman pulses; release stops within "
-            f"{self.args.deadman_timeout:.2f}s.",
+            'Drive keys are deadman pulses; release stops within '
+            f'{self.args.deadman_timeout:.2f}s.',
         )
         self.screen.refresh()
 
     def _can_summary(self):
-        path = f"/sys/class/net/{self.args.can_interface}/operstate"
+        path = f'/sys/class/net/{self.args.can_interface}/operstate'
         try:
-            with open(path, encoding="utf-8") as stream:
+            with open(path, encoding='utf-8') as stream:
                 state = stream.read().strip()
-            return f"CAN: {self.args.can_interface} ({state})"
+            return f'CAN: {self.args.can_interface} ({state})'
         except OSError:
-            return f"CAN: {self.args.can_interface} (not found)"
+            return f'CAN: {self.args.can_interface} (not found)'
 
     def _draw_base(self, row, column):
         heading_style = curses.A_BOLD | curses.color_pair(4)
-        self._safe_add(row, column, "BASE", heading_style)
+        self._safe_add(row, column, 'BASE', heading_style)
         status = self.node.status
         if status is None:
-            self._safe_add(row + 1, column, "Waiting for scout_status...")
+            self._safe_add(row + 1, column, 'Waiting for scout_status...')
             return
         color = 3 if status.error_code else 1
         error_style = curses.color_pair(color)
         self._safe_add(
             row + 1, column,
-            f"Battery       {status.battery_voltage:6.2f} V"
+            f'Battery       {status.battery_voltage:6.2f} V'
         )
         self._safe_add(
             row + 2, column,
-            f"Linear        {status.linear_velocity:6.3f} m/s"
+            f'Linear        {status.linear_velocity:6.3f} m/s'
         )
         self._safe_add(
             row + 3, column,
-            f"Angular       {status.angular_velocity:6.3f} rad/s"
+            f'Angular       {status.angular_velocity:6.3f} rad/s'
         )
         self._safe_add(
             row + 4, column,
-            f"Vehicle/mode  {status.vehicle_state}/{status.control_mode}"
+            f'Vehicle/mode  {status.vehicle_state}/{status.control_mode}'
         )
         self._safe_add(
             row + 5, column,
-            f"Error flags   0x{status.error_code:04x}", error_style
+            f'Error flags   0x{status.error_code:04x}', error_style
         )
         self._safe_add(
             row + 6,
             column,
-            "Lights        front "
-            f"{status.front_light_state.mode} / rear "
-            f"{status.rear_light_state.mode}",
+            'Lights        front '
+            f'{status.front_light_state.mode} / rear '
+            f'{status.rear_light_state.mode}',
         )
 
     def _draw_motors(self, row, column):
         heading_style = curses.A_BOLD | curses.color_pair(4)
-        self._safe_add(row, column, "MOTORS", heading_style)
+        self._safe_add(row, column, 'MOTORS', heading_style)
         self._safe_add(
             row + 1,
             column,
-            "position        rpm    current   voltage   driver °C  motor °C",
+            'position        rpm    current   voltage   driver °C  motor °C',
         )
         status = self.node.status
         for index, name in enumerate(MOTOR_NAMES):
             if status is None:
                 values = (
-                    f"{name:<13}     --         --        --"
-                    "          --        --"
+                    f'{name:<13}     --         --        --'
+                    '          --        --'
                 )
             else:
                 motor = status.actuator_states[index]
                 values = (
-                    f"{name:<13} {motor.rpm:6d}  {motor.current:8.2f} A"
-                    f"  {motor.driver_voltage:6.1f} V"
-                    f"  {motor.driver_temperature:7.1f}"
-                    f"  {motor.motor_temperature:8d}"
+                    f'{name:<13} {motor.rpm:6d}  {motor.current:8.2f} A'
+                    f'  {motor.driver_voltage:6.1f} V'
+                    f'  {motor.driver_temperature:7.1f}'
+                    f'  {motor.motor_temperature:8d}'
                 )
             self._safe_add(row + 2 + index, column, values)
 
     def _draw_odometry(self, row, column):
         heading_style = curses.A_BOLD | curses.color_pair(4)
-        self._safe_add(row, column, "ODOMETRY", heading_style)
+        self._safe_add(row, column, 'ODOMETRY', heading_style)
         odometry = self.node.odometry
         if odometry is None:
-            self._safe_add(row + 1, column, "Waiting for odom...")
+            self._safe_add(row + 1, column, 'Waiting for odom...')
             return
         pose = odometry.pose.pose
         yaw = yaw_from_quaternion(
@@ -348,52 +348,52 @@ class ScoutConsole:
             pose.orientation.z,
             pose.orientation.w,
         )
-        self._safe_add(row + 1, column, f"x    {pose.position.x:8.3f} m")
-        self._safe_add(row + 2, column, f"y    {pose.position.y:8.3f} m")
-        self._safe_add(row + 3, column, f"yaw  {yaw:8.3f} rad")
+        self._safe_add(row + 1, column, f'x    {pose.position.x:8.3f} m')
+        self._safe_add(row + 2, column, f'y    {pose.position.y:8.3f} m')
+        self._safe_add(row + 3, column, f'yaw  {yaw:8.3f} rad')
 
     def _draw_remote(self, row, column):
         heading_style = curses.A_BOLD | curses.color_pair(4)
-        self._safe_add(row, column, "REMOTE", heading_style)
+        self._safe_add(row, column, 'REMOTE', heading_style)
         remote = self.node.remote
         if remote is None:
-            self._safe_add(row + 1, column, "Waiting for rc_status...")
+            self._safe_add(row + 1, column, 'Waiting for rc_status...')
             return
         self._safe_add(
             row + 1,
             column,
-            f"switches  {remote.swa} {remote.swb} "
-            f"{remote.swc} {remote.swd}",
+            f'switches  {remote.swa} {remote.swb} '
+            f'{remote.swc} {remote.swd}',
         )
         self._safe_add(
             row + 2,
             column,
-            f"sticks R  {remote.stick_right_h:4d} "
-            f"{remote.stick_right_v:4d}",
+            f'sticks R  {remote.stick_right_h:4d} '
+            f'{remote.stick_right_v:4d}',
         )
         self._safe_add(
             row + 3,
             column,
-            f"sticks L  {remote.stick_left_h:4d} "
-            f"{remote.stick_left_v:4d}",
+            f'sticks L  {remote.stick_left_h:4d} '
+            f'{remote.stick_left_v:4d}',
         )
 
 
 def parse_args(arguments=None):
     parser = argparse.ArgumentParser(
-        description="SCOUT MINI ROS 2 test console"
+        description='SCOUT MINI ROS 2 test console'
     )
-    parser.add_argument("--status-topic", default="scout_status")
-    parser.add_argument("--odom-topic", default="odom")
-    parser.add_argument("--rc-topic", default="rc_status")
-    parser.add_argument("--cmd-topic", default="cmd_vel")
-    parser.add_argument("--light-topic", default="light_control")
-    parser.add_argument("--can-interface", default="can0")
-    parser.add_argument("--linear-speed", type=float, default=0.15)
-    parser.add_argument("--angular-speed", type=float, default=0.35)
-    parser.add_argument("--lateral-speed", type=float, default=0.15)
-    parser.add_argument("--deadman-timeout", type=float, default=0.25)
-    parser.add_argument("--omni", action="store_true")
+    parser.add_argument('--status-topic', default='scout_status')
+    parser.add_argument('--odom-topic', default='odom')
+    parser.add_argument('--rc-topic', default='rc_status')
+    parser.add_argument('--cmd-topic', default='cmd_vel')
+    parser.add_argument('--light-topic', default='light_control')
+    parser.add_argument('--can-interface', default='can0')
+    parser.add_argument('--linear-speed', type=float, default=0.15)
+    parser.add_argument('--angular-speed', type=float, default=0.35)
+    parser.add_argument('--lateral-speed', type=float, default=0.15)
+    parser.add_argument('--deadman-timeout', type=float, default=0.25)
+    parser.add_argument('--omni', action='store_true')
     return parser.parse_args(arguments)
 
 
@@ -404,12 +404,12 @@ def main(arguments=None):
     args = parse_args(remove_ros_args(raw_arguments)[1:])
     speeds = (args.linear_speed, args.angular_speed, args.lateral_speed)
     if min(speeds) <= 0.0:
-        raise SystemExit("speed values must be positive")
+        raise SystemExit('speed values must be positive')
     if args.deadman_timeout <= 0.0:
-        raise SystemExit("--deadman-timeout must be positive")
+        raise SystemExit('--deadman-timeout must be positive')
     if not sys.stdin.isatty() or not sys.stdout.isatty():
         raise SystemExit(
-            "scout-test-tui requires an interactive terminal"
+            'scout-test-tui requires an interactive terminal'
         )
 
     rclpy.init(args=raw_arguments)
@@ -425,5 +425,5 @@ def main(arguments=None):
         rclpy.shutdown()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

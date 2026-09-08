@@ -60,7 +60,7 @@ class DeadmanController:
 
     def __init__(self, timeout=0.25):
         if timeout <= 0.0:
-            raise ValueError("deadman timeout must be positive")
+            raise ValueError('deadman timeout must be positive')
         self.timeout = timeout
         self.armed = False
         self._deadline = 0.0

@@ -2,7 +2,7 @@
 <package format="3">
   <name>scout_base</name>
   <version>1.0.0</version>
-  <description>ROS 2 Humble driver for SCOUT MINI and SCOUT MINI OMNI.</description>
+  <description>ROS 2 driver for SCOUT MINI and SCOUT MINI OMNI, supporting Humble and Jazzy.</description>
 
   <author email="ruixiang.du@westonrobot.com">Ruixiang Du</author>
   <maintainer email="ruixiang.du@westonrobot.com">Ruixiang Du</maintainer>

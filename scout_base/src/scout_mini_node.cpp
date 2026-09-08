@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/transform_broadcaster.h>
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -28,16 +25,17 @@
 #include <thread>
 #include <utility>
 
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/twist.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
 #include "agilex_ugv_sdk/models/scout/scout_mini.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "scout_msgs/msg/scout_light_cmd.hpp"
 #include "scout_msgs/msg/scout_rc_state.hpp"
 #include "scout_msgs/msg/scout_status.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/transform_broadcaster.hpp"
 
 namespace scout_base
 {

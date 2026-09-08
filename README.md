@@ -1,10 +1,10 @@
 # SCOUT MINI ROS 2 Driver
 
 [![Build](https://github.com/Hive-Matrix-AI/scout_ros2/actions/workflows/ros-ci.yml/badge.svg?branch=humble)](https://github.com/Hive-Matrix-AI/scout_ros2/actions/workflows/ros-ci.yml)
-[![Platform](https://img.shields.io/badge/platform-Ubuntu%2022.04-E95420?logo=ubuntu&logoColor=white)](#requirements)
+[![Platform](https://img.shields.io/badge/platform-Ubuntu%2022.04%20%7C%2024.04-E95420?logo=ubuntu&logoColor=white)](#requirements)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-ROS 2 Humble packages for operating **SCOUT MINI** and **SCOUT MINI OMNI** over
+ROS 2 packages for operating **SCOUT MINI** and **SCOUT MINI OMNI** over
 SocketCAN. The driver publishes the robot's motion, battery, actuator, light,
 remote-control, odometry, and TF state, and accepts standard ROS velocity
 commands.
@@ -20,7 +20,8 @@ implements SCOUT MINI and SCOUT MINI OMNI, which this ROS 2 driver exposes.
 | --- | --- |
 | SCOUT MINI, skid-steer | Supported |
 | SCOUT MINI OMNI | Supported with `omni:=true` |
-| ROS 2 distribution | Humble on Ubuntu 22.04 |
+| ROS 2 Humble | Ubuntu 22.04 (Jammy) |
+| ROS 2 Jazzy | Ubuntu 24.04 (Noble) |
 | Transport | SocketCAN at 500 kbit/s |
 
 ## Packages
@@ -33,13 +34,23 @@ implements SCOUT MINI and SCOUT MINI OMNI, which this ROS 2 driver exposes.
 
 ## Requirements
 
-- Ubuntu 22.04 and ROS 2 Humble
+- Ubuntu 22.04 with ROS 2 Humble, or Ubuntu 24.04 with ROS 2 Jazzy
 - Colcon and rosdep (`python3-colcon-common-extensions`, `python3-rosdep`)
 - A CAN adapter exposed as a SocketCAN interface (normally `can0`)
 - SCOUT MINI or SCOUT MINI OMNI
 - The robot's emergency stop within reach during motion tests
 
 ## Install
+
+Source the ROS distribution installed on your system:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+On Ubuntu 22.04, use `source /opt/ros/humble/setup.bash` instead. Both
+distributions use the same packages and launch commands. Use separate workspaces
+when building for different ROS distributions.
 
 Initialize rosdep with `sudo rosdep init` if it has not already been initialized,
 then run `rosdep update`.
@@ -51,8 +62,7 @@ mkdir -p ~/scout_ws/src
 cd ~/scout_ws/src
 git clone --recurse-submodules https://github.com/Hive-Matrix-AI/scout_ros2.git
 cd ~/scout_ws
-source /opt/ros/humble/setup.bash
-rosdep install --from-paths src --ignore-src -r -y
+rosdep install --from-paths src --ignore-src -r -y --rosdistro "$ROS_DISTRO"
 colcon build --symlink-install
 source install/setup.bash
 ```
