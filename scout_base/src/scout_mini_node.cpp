@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -28,6 +27,8 @@
 #include "agilex_ugv_sdk/models/scout/scout_mini.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "motion_command_buffer.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "scout_msgs/msg/scout_light_cmd.hpp"
@@ -59,7 +60,8 @@ public:
     const bool simulated_robot =
       declare_parameter<bool>("simulated_robot", false);
     const int control_rate = declare_parameter<int>("control_rate", 50);
-    command_timeout_s_ = declare_parameter<double>("cmd_vel_timeout", 0.5);
+    const double command_timeout_s = declare_parameter<double>("cmd_vel_timeout", 0.5);
+    const bool use_stamped_cmd_vel = declare_parameter<bool>("use_stamped_cmd_vel", false);
 
     if (!is_scout_mini) {
       throw std::invalid_argument(
@@ -69,9 +71,11 @@ public:
       throw std::invalid_argument(
               "simulation mode is not part of the hardware SDK wrapper");
     }
-    if (control_rate < 1 || command_timeout_s_ <= 0.0) {
+    if (control_rate < 1 || !std::isfinite(command_timeout_s) || command_timeout_s <= 0.0) {
       throw std::invalid_argument("control_rate and cmd_vel_timeout must be positive");
     }
+    motion_commands_ = std::make_unique<MotionCommandBuffer>(
+      is_omni_, base_frame_, command_timeout_s);
 
     if (const auto error = robot_.connect(port_name_)) {
       throw std::runtime_error(
@@ -94,11 +98,26 @@ public:
     transform_broadcaster_ =
       std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-    motion_subscription_ = create_subscription<geometry_msgs::msg::Twist>(
-      "cmd_vel", 5,
-      [this](geometry_msgs::msg::Twist::ConstSharedPtr message) {
-        handle_motion_command(*message);
-      });
+    if (use_stamped_cmd_vel) {
+      stamped_motion_subscription_ = create_subscription<geometry_msgs::msg::TwistStamped>(
+        "cmd_vel", 5,
+        [this](geometry_msgs::msg::TwistStamped::ConstSharedPtr message) {
+          if (!motion_commands_->update(*message, now())) {
+            RCLCPP_WARN_THROTTLE(
+              get_logger(), *get_clock(), 1000,
+              "Rejected cmd_vel: check timestamp, base frame, and finite velocities");
+          }
+        });
+    } else {
+      motion_subscription_ = create_subscription<geometry_msgs::msg::Twist>(
+        "cmd_vel", 5,
+        [this](geometry_msgs::msg::Twist::ConstSharedPtr message) {
+          if (!motion_commands_->update(*message, now())) {
+            RCLCPP_WARN_THROTTLE(
+              get_logger(), *get_clock(), 1000, "Rejected non-finite cmd_vel");
+          }
+        });
+    }
     light_subscription_ =
       create_subscription<scout_msgs::msg::ScoutLightCmd>(
       "light_control", 5,
@@ -130,16 +149,6 @@ public:
   }
 
 private:
-  void handle_motion_command(const geometry_msgs::msg::Twist & message)
-  {
-    std::lock_guard<std::mutex> lock(command_mutex_);
-    latest_command_.linear_velocity_mps = message.linear.x;
-    latest_command_.angular_velocity_radps = message.angular.z;
-    latest_command_.lateral_velocity_mps = is_omni_ ? message.linear.y : 0.0;
-    last_command_time_ = now();
-    has_command_ = true;
-  }
-
   void handle_light_command(const scout_msgs::msg::ScoutLightCmd & message)
   {
     if (message.front_mode > 3U || message.rear_mode > 3U) {
@@ -164,15 +173,7 @@ private:
 
   void control_cycle()
   {
-    agilex::ugv::MotionCommand command;
-    {
-      std::lock_guard<std::mutex> lock(command_mutex_);
-      if (has_command_ &&
-        (now() - last_command_time_).seconds() <= command_timeout_s_)
-      {
-        command = latest_command_;
-      }
-    }
+    const auto command = motion_commands_->command(now());
     if (const auto error = robot_.set_motion(command)) {
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 1000,
@@ -295,12 +296,7 @@ private:
   const std::string odom_topic_name_;
   const bool is_omni_;
   agilex::ugv::ScoutMini robot_;
-  double command_timeout_s_{0.5};
-
-  std::mutex command_mutex_;
-  agilex::ugv::MotionCommand latest_command_;
-  rclcpp::Time last_command_time_{0, 0, RCL_ROS_TIME};
-  bool has_command_{false};
+  std::unique_ptr<MotionCommandBuffer> motion_commands_;
   rclcpp::Time last_update_time_{0, 0, RCL_ROS_TIME};
   double position_x_{0.0};
   double position_y_{0.0};
@@ -311,6 +307,8 @@ private:
   rclcpp::Publisher<scout_msgs::msg::ScoutRCState>::SharedPtr remote_publisher_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
     motion_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
+    stamped_motion_subscription_;
   rclcpp::Subscription<scout_msgs::msg::ScoutLightCmd>::SharedPtr
     light_subscription_;
   rclcpp::TimerBase::SharedPtr control_timer_;

@@ -62,34 +62,48 @@ if(BUILD_TESTING)
   find_package(ament_cmake_copyright REQUIRED)
   find_package(ament_cmake_cpplint REQUIRED)
   find_package(ament_cmake_flake8 REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_lint_cmake REQUIRED)
   find_package(ament_cmake_pep257 REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ament_cmake_uncrustify REQUIRED)
 
   ament_copyright(
+    src/motion_command_buffer.hpp
     src/scout_mini_node.cpp
     launch/scout_mini.launch.py
     scout_base_tools/__init__.py
     scout_base_tools/app.py
     scout_base_tools/core.py
     scripts/scout_test_tui
-    test/test_tui_core.py)
-  ament_cpplint(src/scout_mini_node.cpp)
+    test/test_tui_core.py
+    test/test_tui_commands.py
+    test/test_motion_command_buffer.cpp)
+  ament_cpplint(src/scout_mini_node.cpp src/motion_command_buffer.hpp
+    test/test_motion_command_buffer.cpp)
   ament_flake8(
     launch/scout_mini.launch.py
     scout_base_tools
     scripts/scout_test_tui
-    test/test_tui_core.py)
+    test/test_tui_core.py
+    test/test_tui_commands.py)
   ament_lint_cmake(CMakeLists.txt)
   ament_pep257(
     launch/scout_mini.launch.py
     scout_base_tools
     scripts/scout_test_tui
-    test/test_tui_core.py)
+    test/test_tui_core.py
+    test/test_tui_commands.py)
   ament_add_pytest_test(test_tui_core test/test_tui_core.py
     APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR})
-  ament_uncrustify(src/scout_mini_node.cpp src/scout_mini_smoke.cpp)
+  ament_add_pytest_test(test_tui_commands test/test_tui_commands.py
+    APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR})
+  ament_add_gtest(test_motion_command_buffer test/test_motion_command_buffer.cpp)
+  target_include_directories(test_motion_command_buffer PRIVATE src)
+  target_link_libraries(test_motion_command_buffer agilex_ugv_sdk::agilex_ugv_sdk)
+  ament_target_dependencies(test_motion_command_buffer geometry_msgs rclcpp)
+  ament_uncrustify(src/scout_mini_node.cpp src/scout_mini_smoke.cpp
+    src/motion_command_buffer.hpp test/test_motion_command_buffer.cpp)
 endif()
 
 ament_package()

@@ -9,8 +9,8 @@
 **Bring SCOUT MINI and SCOUT MINI OMNI into your ROS 2 application.**
 
 Control your base through standard velocity commands, read robot feedback, and
-inspect the connection from a terminal dashboard. A shared SocketCAN driver
-supports both skid-steer and omnidirectional configurations.
+inspect the connection from a terminal dashboard. Operate skid-steer and
+omnidirectional bases over SocketCAN.
 
 [Quick start](#quick-start) · [Supported configurations](#supported-configurations) ·
 [Terminal dashboard](#terminal-dashboard) · [Driver reference](scout_base/README.md) ·
@@ -18,14 +18,11 @@ supports both skid-steer and omnidirectional configurations.
 
 ## Highlights
 
-- **Standard ROS interfaces.** `cmd_vel` input, wheel odometry, TF, and typed
-  status messages for battery, motors, lights, and remote control.
-- **Two drive configurations.** Select SCOUT MINI or SCOUT MINI OMNI with one
-  launch argument, including lateral velocity for OMNI.
-- **Built-in commissioning tools.** A terminal dashboard with guarded motion
-  controls, plus automated CAN feedback and low-speed diagnostics.
-- **Tested across distributions.** CI builds and tests Humble and Jazzy,
-  including installed launch files and the Python console entry point.
+- SCOUT MINI and SCOUT MINI OMNI control over SocketCAN.
+- `Twist` and `TwistStamped` velocity commands.
+- Odometry, TF, battery, motor, light, and remote-control feedback.
+- Command timeout stop and front/rear light control.
+- Terminal dashboard, CAN diagnostics, and low-speed motion tests.
 
 ## Supported configurations
 
@@ -97,6 +94,15 @@ For SCOUT MINI OMNI:
 ros2 launch scout_base scout_mini.launch.py omni:=true
 ```
 
+For `TwistStamped` input on `cmd_vel`:
+
+```bash
+ros2 launch scout_base scout_mini.launch.py use_stamped_cmd_vel:=true
+```
+
+The default input is `Twist`. See [velocity commands](scout_base/README.md#velocity-commands)
+for timestamp and frame requirements.
+
 The driver enables CAN commanded mode on connection. A command watchdog sends
 zero velocity after **0.5 s** without a new `cmd_vel`; shutdown also sends
 zero-speed frames. These controls do not replace the physical emergency stop.
@@ -120,6 +126,8 @@ For lower test speeds:
 ros2 run scout_base scout_test_tui --linear-speed 0.08 --angular-speed 0.20
 ```
 
+Add `--stamped` when the driver uses `TwistStamped` input.
+
 See [dashboard controls](scout_base/README.md#terminal-dashboard) for key bindings,
 OMNI operation, and remapping, or [CAN diagnostics](scout_base/README.md#can-diagnostics)
 for automated checks.
@@ -132,9 +140,10 @@ for automated checks.
 | [`scout_msgs`](scout_msgs/msg) | Robot status, actuator, remote-control, and light-control messages |
 | [`scout_description`](scout_base/README.md#robot-description) | Bundled SCOUT V2 URDF and meshes |
 
-The driver accepts `cmd_vel` (`geometry_msgs/msg/Twist`) and `light_control`.
+The driver accepts `cmd_vel` (`geometry_msgs/msg/Twist` or `TwistStamped`, selected
+at startup) and `light_control`.
 It publishes `scout_status`, `rc_status`, `odom`, and the `odom` → `base_link` TF.
-OMNI also uses `cmd_vel.linear.y` for lateral motion.
+OMNI also uses the command's `linear.y` component for lateral motion.
 
 The bundled description is a SCOUT V2 model with fixed wheel joints. Use
 vehicle-specific geometry for SCOUT MINI or OMNI collision checking.

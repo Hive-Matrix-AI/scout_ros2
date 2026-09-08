@@ -19,7 +19,7 @@ import curses
 import sys
 from time import monotonic
 
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
@@ -42,13 +42,15 @@ class ScoutTestNode(Node):
         self.status = None
         self.odometry = None
         self.remote = None
+        self.stamped = args.stamped
+        self.command_frame = args.frame_id
         self.health = {
             'status': TopicHealth(),
             'odom': TopicHealth(),
             'remote': TopicHealth(),
         }
         self.command_publisher = self.create_publisher(
-            Twist, args.cmd_topic, 5
+            TwistStamped if self.stamped else Twist, args.cmd_topic, 5
         )
         self.light_publisher = self.create_publisher(
             ScoutLightCmd, args.light_topic, 5
@@ -74,10 +76,17 @@ class ScoutTestNode(Node):
         self.health['remote'].record()
 
     def publish_velocity(self, velocity):
-        message = Twist()
-        message.linear.x = velocity.linear
-        message.linear.y = velocity.lateral
-        message.angular.z = velocity.angular
+        if self.stamped:
+            message = TwistStamped()
+            message.header.stamp = self.get_clock().now().to_msg()
+            message.header.frame_id = self.command_frame
+            twist = message.twist
+        else:
+            message = Twist()
+            twist = message
+        twist.linear.x = velocity.linear
+        twist.linear.y = velocity.lateral
+        twist.angular.z = velocity.angular
         self.command_publisher.publish(message)
 
     def publish_lights(self, front_on, rear_on):
@@ -394,6 +403,10 @@ def parse_args(arguments=None):
     parser.add_argument('--lateral-speed', type=float, default=0.15)
     parser.add_argument('--deadman-timeout', type=float, default=0.25)
     parser.add_argument('--omni', action='store_true')
+    parser.add_argument('--stamped', action='store_true',
+                        help='Publish TwistStamped velocity commands')
+    parser.add_argument('--frame-id', default='base_link',
+                        help='Command frame for --stamped; match the driver base_frame')
     return parser.parse_args(arguments)
 
 

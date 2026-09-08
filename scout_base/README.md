@@ -3,7 +3,7 @@
 `scout_base` is the ROS 2 hardware driver for SCOUT MINI and SCOUT MINI
 OMNI. It connects to the base through SocketCAN, publishes robot state and
 wheel-integrated odometry, broadcasts `odom` to `base_link`, and accepts
-`geometry_msgs/msg/Twist` velocity commands.
+`geometry_msgs/msg/Twist` or `geometry_msgs/msg/TwistStamped` velocity commands.
 
 Supported environments are Humble on Ubuntu 22.04 and Jazzy on Ubuntu 24.04.
 
@@ -30,7 +30,8 @@ ros2 launch scout_base scout_mini.launch.py \
   base_frame:=base_link \
   odom_topic_name:=odom \
   control_rate:=50 \
-  cmd_vel_timeout:=0.5
+  cmd_vel_timeout:=0.5 \
+  use_stamped_cmd_vel:=false
 ```
 
 | Argument | Default | Description |
@@ -42,6 +43,7 @@ ros2 launch scout_base scout_mini.launch.py \
 | `odom_topic_name` | `odom` | Odometry topic name |
 | `control_rate` | `50` | Hardware command and state loop rate in Hz |
 | `cmd_vel_timeout` | `0.5` | Maximum command age before zero velocity, in seconds |
+| `use_stamped_cmd_vel` | `false` | Select `TwistStamped` instead of `Twist` on `cmd_vel` at startup |
 | `use_sim_time` | `false` | Use the ROS simulation clock |
 
 ## ROS interface
@@ -53,7 +55,7 @@ on `/tf`; use TF remapping and distinct frame names for multi-robot deployments.
 
 | Topic | Type | Description |
 | --- | --- | --- |
-| `cmd_vel` | `geometry_msgs/msg/Twist` | Longitudinal and angular velocity; `linear.y` is used only by OMNI |
+| `cmd_vel` | `geometry_msgs/msg/Twist` or `geometry_msgs/msg/TwistStamped` | Selected by `use_stamped_cmd_vel`; `linear.y` is used only by OMNI |
 | `light_control` | `scout_msgs/msg/ScoutLightCmd` | Front and rear light mode and brightness |
 
 ### Published topics
@@ -67,6 +69,29 @@ on `/tf`; use TF remapping and distinct frame names for multi-robot deployments.
 
 The actuator array order is front-right, front-left, rear-right, rear-left.
 Odometry is integrated from base feedback and is not a globally corrected pose.
+
+### Velocity commands
+
+The default `cmd_vel` input is `Twist`. To use `TwistStamped` on the same topic:
+
+```bash
+ros2 launch scout_base scout_mini.launch.py use_stamped_cmd_vel:=true
+```
+
+Only the selected message type is subscribed. Configure velocity publishers to
+match it, and use one active command source at a time.
+
+- Both types use `linear.x` for longitudinal velocity and `angular.z` for yaw
+  rate. OMNI also uses `linear.y`; skid-steer ignores it.
+- For `TwistStamped`, `header.frame_id` must be empty or match `base_frame`.
+  Commands are interpreted in the base frame; no TF conversion is performed.
+- A nonzero `header.stamp` must use the driver's ROS clock and be no older than
+  `cmd_vel_timeout`. Future or malformed timestamps are rejected. A zero stamp
+  uses the reception time.
+- The watchdog measures stamped command age from the source timestamp and
+  unstamped command age from reception. It also stops motion after
+  `cmd_vel_timeout` of elapsed time without an accepted command, even if ROS time
+  pauses. Invalid commands do not refresh it.
 
 ## Terminal dashboard
 
@@ -104,6 +129,15 @@ lower test speeds:
 ros2 run scout_base scout_test_tui --omni \
   --linear-speed 0.08 --lateral-speed 0.08 --angular-speed 0.20
 ```
+
+For a driver launched with `use_stamped_cmd_vel:=true`:
+
+```bash
+ros2 run scout_base scout_test_tui --stamped
+```
+
+The console timestamps each command with its ROS clock. If the driver uses a
+custom `base_frame`, pass the same value with `--frame-id`.
 
 Namespaced deployments can remap the console in the normal ROS 2 way:
 

@@ -27,6 +27,10 @@ def generate_launch_description():
         DeclareLaunchArgument('odom_topic_name', default_value='odom'),
         DeclareLaunchArgument('control_rate', default_value='50'),
         DeclareLaunchArgument('cmd_vel_timeout', default_value='0.5'),
+        DeclareLaunchArgument(
+            'use_stamped_cmd_vel', default_value='false',
+            description='Subscribe to TwistStamped instead of Twist on cmd_vel',
+        ),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
     ]
 
@@ -45,6 +49,7 @@ def generate_launch_description():
             'odom_topic_name': LaunchConfiguration('odom_topic_name'),
             'control_rate': LaunchConfiguration('control_rate'),
             'cmd_vel_timeout': LaunchConfiguration('cmd_vel_timeout'),
+            'use_stamped_cmd_vel': LaunchConfiguration('use_stamped_cmd_vel'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
         }],
     )
