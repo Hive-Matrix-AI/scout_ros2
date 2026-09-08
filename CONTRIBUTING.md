@@ -23,7 +23,8 @@ Shared C++ APIs and CAN protocol changes belong in
 An SDK update must be available in that repository before changing the submodule
 revision here.
 
-CI builds and tests Humble on Ubuntu 22.04 and Jazzy on Ubuntu 24.04. Use separate
+CI builds and tests Humble on Ubuntu 22.04 and Jazzy on Ubuntu 24.04. Install the
+dependencies in the [quick start](README.md#quick-start) and use separate
 workspaces for each distribution. From a workspace containing the repository and
 its initialized submodule:
 

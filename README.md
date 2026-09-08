@@ -46,21 +46,21 @@ connection uses **SocketCAN at 500 kbit/s**.
 
 ### Build the workspace
 
-Requires an installed ROS 2 distribution, Colcon, and rosdep
-(`python3-colcon-common-extensions` and `python3-rosdep`). If rosdep has not been
-initialized, run `sudo rosdep init` once before the commands below.
+Requires ROS 2 **ROS Base** or **Desktop**. Install the build tools and Xacro
+directly with APT:
 
 The example uses Jazzy. On Ubuntu 22.04, replace the first line with
 `source /opt/ros/humble/setup.bash`. Use separate workspaces for each distribution.
 
 ```bash
 source /opt/ros/jazzy/setup.bash
+sudo apt update
+sudo apt install -y build-essential cmake python3-colcon-common-extensions \
+  "ros-${ROS_DISTRO}-xacro"
 mkdir -p ~/scout_ws/src
 cd ~/scout_ws/src
 git clone --branch humble --recurse-submodules https://github.com/Hive-Matrix-AI/scout_ros2.git
 cd ~/scout_ws
-rosdep update
-rosdep install --from-paths src --ignore-src -r -y --rosdistro "$ROS_DISTRO"
 colcon build --symlink-install
 source install/setup.bash
 ```

@@ -15,9 +15,10 @@ ros2:
         ROS_IMAGE: ros:jazzy-ros-base-noble
   before_script:
     - apt-get update
-    - apt-get install -y python3-colcon-common-extensions python3-rosdep
-    - rosdep update
-    - rosdep install --from-paths . --ignore-src -r -y --rosdistro "$ROS_DISTRO"
+    - >-
+      apt-get install -y --no-install-recommends
+      build-essential cmake python3-colcon-common-extensions
+      "ros-${ROS_DISTRO}-xacro"
   script:
     - . "/opt/ros/$ROS_DISTRO/setup.sh"
     - colcon build --base-paths . --cmake-args -DBUILD_TESTING=ON
