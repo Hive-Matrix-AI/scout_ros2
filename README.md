@@ -1,5 +1,7 @@
 # SCOUT ROS 2
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 [![Build](https://github.com/Hive-Matrix-AI/scout_ros2/actions/workflows/ros-ci.yml/badge.svg?branch=humble)](https://github.com/Hive-Matrix-AI/scout_ros2/actions/workflows/ros-ci.yml)
 [![ROS 2](https://img.shields.io/badge/ROS%202-Humble%20%7C%20Jazzy-22314E?logo=ros&logoColor=white)](#supported-configurations)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04-E95420?logo=ubuntu&logoColor=white)](#supported-configurations)

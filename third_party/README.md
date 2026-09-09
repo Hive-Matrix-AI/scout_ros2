@@ -1,7 +1,10 @@
 # SDK dependency
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 [`agilex_ugv_sdk`](agilex_ugv_sdk/README.md) is a general-purpose SDK for new
-AgileX mobile robot models, currently implementing SCOUT MINI and SCOUT MINI OMNI.
+AgileX mobile robot models. The revision pinned here supports SCOUT MINI and
+SCOUT MINI OMNI; the upstream SDK may support additional models.
 It is included here as a Git submodule for this driver's SCOUT integration.
 Initialize the revision recorded by this repository from the repository root:
 

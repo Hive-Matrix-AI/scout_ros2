@@ -6,6 +6,7 @@ Notable user-facing changes to this repository are documented here.
 
 ### Added
 
+- Simplified Chinese project, driver, SDK dependency, and contribution guides.
 - Optional `TwistStamped` input on `cmd_vel` via `use_stamped_cmd_vel`, with
   timestamp and base-frame checks, plus `--stamped` support in the terminal dashboard.
 - Ubuntu 24.04 / ROS 2 Jazzy support alongside Ubuntu 22.04 / ROS 2 Humble,
@@ -16,6 +17,7 @@ Notable user-facing changes to this repository are documented here.
 
 ### Changed
 
+- Removed unused driver dependencies and clarified dashboard connection and stop messages.
 - Command timeout protection also uses elapsed time to stop when ROS time pauses.
 - Documented installation, SocketCAN configuration, ROS interfaces, and hardware
   validation.

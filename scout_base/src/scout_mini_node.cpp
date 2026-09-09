@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <utility>
 
 #include "agilex_ugv_sdk/models/scout/scout_mini.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
@@ -65,11 +64,11 @@ public:
 
     if (!is_scout_mini) {
       throw std::invalid_argument(
-              "agilex_ugv_sdk currently supports the SCOUT MINI profile only");
+              "scout_base requires a SCOUT MINI or SCOUT MINI OMNI base");
     }
     if (simulated_robot) {
       throw std::invalid_argument(
-              "simulation mode is not part of the hardware SDK wrapper");
+              "scout_base requires a physical SocketCAN interface");
     }
     if (control_rate < 1 || !std::isfinite(command_timeout_s) || command_timeout_s <= 0.0) {
       throw std::invalid_argument("control_rate and cmd_vel_timeout must be positive");

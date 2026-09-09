@@ -1,5 +1,7 @@
 # Contributing
 
+[English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
+
 ## Report a problem
 
 Open an [issue](https://github.com/Hive-Matrix-AI/scout_ros2/issues) with the
@@ -15,6 +17,8 @@ robot was raised off the ground. Never repeat an unsafe motion to collect logs.
 Target the `humble` branch, which supports both Humble and Jazzy. Keep changes
 focused, add regression tests when behavior changes, and update the public
 documentation for interface changes.
+Keep the English and Simplified Chinese guides in sync, including commands,
+parameter defaults, supported configurations, and safety instructions.
 Preserve existing license and attribution notices.
 
 SCOUT ROS nodes, launch files, and diagnostics belong in this repository.

@@ -1,5 +1,7 @@
 # scout_base
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 `scout_base` is the ROS 2 hardware driver for SCOUT MINI and SCOUT MINI
 OMNI. It connects to the base through SocketCAN, publishes robot state and
 wheel-integrated odometry, broadcasts `odom` to `base_link`, and accepts
@@ -172,8 +174,6 @@ ros2 run scout_base scout_mini_smoke --ros-args \
 
 The sequence enables CAN commanded mode, moves forward, stops, rotates, and
 stops again. On exit it sends zero-speed commands without selecting standby.
-The executable is provided by `scout_base`; use this package name in place of
-`agilex_ugv_sdk` when updating existing diagnostic commands.
 
 ## Robot description
 
@@ -195,7 +195,13 @@ terminal-display problem.
 **The TUI is online but the robot does not move.** The console must show
 `Motion: ARMED` and a non-zero `cmd_vel subscribers` count. Also check the
 physical emergency stop, robot power, CAN control mode, and `scout_status`
-error flags.
+error flags. Match `--stamped` to the driver's `use_stamped_cmd_vel` setting;
+for stamped commands, also match the base frame and ROS clock.
+
+Topic freshness indicates ROS message reception, not fresh CAN feedback. The
+driver republishes its latest state, so an online dashboard alone does not
+confirm that the base is still sending CAN frames. Inspect the adapter's RX
+counters with `ip -details -statistics link show can0` when checking the connection.
 
 **The robot moves briefly and stops.** Both the TUI deadman pulse and the driver
 watchdog are working as designed. Hold or repeatedly tap the drive key, and do

@@ -154,7 +154,7 @@ class ScoutConsole:
         if key in (27, ord(' ')):
             self.deadman.disarm()
             self.node.publish_velocity(Velocity())
-            self.notice = 'EMERGENCY STOP: motion locked'
+            self.notice = 'Zero command sent; motion locked'
             return
         if key in (ord('q'), ord('Q')):
             self.deadman.disarm()
